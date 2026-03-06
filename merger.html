@@ -1,0 +1,1359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SyncStudio Pro — Voiceover Merger</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400&family=Outfit:wght@200;300;400;500;600&display=swap');
+:root{
+  --bg:#080a0f;--bg2:#0d1018;
+  --surf:rgba(255,255,255,0.04);--surf2:rgba(255,255,255,0.07);
+  --gold:#d4a843;--gold2:#f0cc7a;
+  --gdim:rgba(212,168,67,0.1);--gbor:rgba(212,168,67,0.22);
+  --txt:#e8e4dc;--mut:#7a7570;--bor:rgba(255,255,255,0.07);
+  --grn:#4caf7d;--red:#e05555;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--txt);font-family:'Outfit',sans-serif;font-weight:300;min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse 60% 45% at 10% 8%,rgba(212,168,67,0.06),transparent 55%),
+             radial-gradient(ellipse 50% 40% at 90% 90%,rgba(91,141,238,0.04),transparent 55%);}
+.app{position:relative;z-index:1;max-width:940px;margin:0 auto;padding:0 20px 100px;}
+
+/* ── HEADER ── */
+.hdr{padding:48px 0 36px;display:flex;flex-direction:column;align-items:center;text-align:center;}
+.logo{font-family:'Playfair Display',serif;font-size:clamp(1.9rem,4.5vw,3.2rem);font-weight:400;letter-spacing:.04em;margin-bottom:7px;}
+.logo em{font-style:italic;color:var(--gold);}
+.logo-sub{font-size:.65rem;font-weight:500;letter-spacing:.26em;text-transform:uppercase;color:var(--mut);margin-bottom:24px;}
+.steps{display:flex;background:var(--surf);border:1px solid var(--gbor);border-radius:100px;padding:4px;flex-wrap:wrap;justify-content:center;}
+.sp{padding:6px 14px;border-radius:100px;font-size:.68rem;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);cursor:pointer;transition:all .3s;white-space:nowrap;}
+.sp.active{background:var(--gold);color:var(--bg);}
+.sp.done{color:var(--gold);}
+
+/* ── CARDS ── */
+.card{background:var(--surf);border:1px solid var(--gbor);border-radius:4px;margin-bottom:10px;display:none;position:relative;overflow:hidden;}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+.card.on{display:block;animation:rise .35s ease;}
+@keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.ch{padding:22px 26px 15px;border-bottom:1px solid var(--bor);display:flex;align-items:baseline;gap:12px;}
+.cn{font-family:'Playfair Display',serif;font-size:1.8rem;color:rgba(212,168,67,.18);line-height:1;flex-shrink:0;}
+.ct{font-family:'Playfair Display',serif;font-size:1.25rem;font-weight:400;letter-spacing:.03em;}
+.cd{font-size:.74rem;color:var(--mut);margin-top:2px;}
+.cb{padding:22px 26px;}
+
+/* ── UPLOAD ── */
+.ugrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
+.dz{border:1px dashed var(--gbor);border-radius:3px;padding:26px 14px;text-align:center;cursor:pointer;transition:all .3s;position:relative;overflow:hidden;}
+.dz input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.dz:hover,.dz.ok{border-color:var(--gold);background:var(--gdim);}
+.di{font-size:1.7rem;display:block;margin-bottom:7px;}
+.dt{font-family:'Playfair Display',serif;font-size:.9rem;margin-bottom:2px;}
+.dh{font-size:.68rem;color:var(--mut);}
+.dc{display:none;color:var(--gold);font-size:.69rem;margin-top:4px;}
+.dz.ok .dc{display:block;}
+video#vp{width:100%;border-radius:3px;border:1px solid var(--gbor);background:#000;display:none;margin-bottom:12px;max-height:180px;object-fit:contain;}
+.fpill{display:none;flex-direction:column;gap:2px;background:var(--surf2);border:1px solid var(--gbor);border-radius:3px;padding:8px 12px;margin-top:8px;font-size:.74rem;}
+.fpill.on{display:flex;}
+.fpill b{color:var(--txt);font-weight:400;}
+.fpill span{color:var(--mut);font-size:.66rem;}
+
+/* ── FORM ── */
+.lbl{font-size:.64rem;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);display:block;margin-bottom:7px;}
+textarea{width:100%;background:var(--surf2);border:1px solid var(--gbor);border-radius:3px;color:var(--txt);font-family:'Outfit',sans-serif;font-size:.86rem;font-weight:300;line-height:1.8;padding:13px 15px;resize:vertical;min-height:135px;outline:none;transition:border-color .2s;}
+textarea:focus{border-color:var(--gold);}
+textarea::placeholder{color:var(--mut);font-style:italic;}
+.sw{position:relative;}
+.ob{position:absolute;top:8px;right:8px;background:var(--gdim);border:1px solid var(--gbor);color:var(--gold);font-family:'Outfit',sans-serif;font-size:.67rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;padding:4px 11px;border-radius:2px;cursor:pointer;transition:all .2s;}
+.ob:hover{background:var(--gold);color:var(--bg);}
+.ob:disabled{opacity:.4;cursor:not-allowed;}
+.diffbox{display:none;background:rgba(76,175,125,.06);border:1px solid rgba(76,175,125,.2);border-radius:3px;padding:11px 15px;margin-top:8px;font-size:.77rem;line-height:1.7;}
+.diffbox.on{display:block;}
+.diffbox .dlbl{font-size:.61rem;letter-spacing:.12em;text-transform:uppercase;color:var(--grn);margin-bottom:6px;font-weight:500;}
+.diffbox .do{color:var(--mut);text-decoration:line-through;font-size:.72rem;}
+.diffbox .dn{color:var(--txt);}
+
+/* ── SELECT ── */
+.tg{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:12px;}
+.fi{display:flex;flex-direction:column;gap:6px;}
+select{background:var(--surf2);border:1px solid var(--gbor);border-radius:3px;color:var(--txt);font-family:'Outfit',sans-serif;font-size:.79rem;font-weight:300;padding:9px 11px;outline:none;appearance:none;cursor:pointer;transition:border-color .2s;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23d4a843'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:25px;}
+select:focus{border-color:var(--gold);}
+
+/* ── MUSIC ── */
+.mgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:7px;}
+.mc{border:1px solid var(--gbor);border-radius:3px;padding:10px 11px;cursor:pointer;transition:all .2s;background:var(--surf);position:relative;}
+.mc:hover,.mc.on{border-color:var(--gold);background:var(--gdim);}
+.mc.on::after{content:'✓';position:absolute;top:7px;right:8px;color:var(--gold);font-size:.65rem;}
+.mi{font-size:1.15rem;display:block;margin-bottom:4px;}
+.mn{font-family:'Playfair Display',serif;font-size:.82rem;margin-bottom:1px;}
+.md{font-size:.65rem;color:var(--mut);}
+.mb{font-size:.58rem;color:var(--gold);margin-top:2px;}
+.vols{display:flex;align-items:center;gap:10px;margin-top:11px;}
+.vols label{font-size:.64rem;letter-spacing:.15em;text-transform:uppercase;color:var(--mut);font-weight:500;white-space:nowrap;}
+input[type=range]{flex:1;appearance:none;height:2px;background:var(--gbor);border-radius:1px;outline:none;cursor:pointer;}
+input[type=range]::-webkit-slider-thumb{appearance:none;width:12px;height:12px;border-radius:50%;background:var(--gold);cursor:pointer;border:2px solid var(--bg);}
+.vnum{font-size:.73rem;color:var(--gold);min-width:27px;text-align:right;font-family:'Playfair Display',serif;}
+
+/* ── BUTTONS ── */
+.bg{width:100%;padding:13px;background:var(--gold);color:var(--bg);border:none;border-radius:3px;font-family:'Playfair Display',serif;font-size:.9rem;font-weight:500;letter-spacing:.1em;cursor:pointer;transition:all .25s;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:15px;}
+.bg:hover{background:var(--gold2);transform:translateY(-1px);}
+.bg:disabled{opacity:.35;cursor:not-allowed;transform:none;}
+.bgh{padding:11px 17px;background:transparent;color:var(--gold);border:1px solid var(--gbor);border-radius:3px;font-family:'Outfit',sans-serif;font-size:.76rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:5px;}
+.bgh:hover{border-color:var(--gold);background:var(--gdim);}
+.bgh:disabled{opacity:.3;cursor:not-allowed;}
+.brow{display:flex;gap:8px;margin-top:15px;}
+hr.sep{border:none;border-top:1px solid var(--bor);margin:6px 0;}
+
+/* ── STAGE ── */
+.pbar{height:2px;background:var(--gbor);border-radius:1px;margin:15px 0 20px;overflow:hidden;}
+.pfil{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:1px;width:0%;transition:width .5s ease;}
+.slist{display:flex;flex-direction:column;gap:7px;}
+.stage{display:flex;align-items:center;gap:11px;padding:10px 13px;border:1px solid var(--bor);border-radius:3px;background:var(--surf);transition:all .3s;}
+.stage.act{border-color:var(--gold);background:var(--gdim);}
+.stage.done{border-color:rgba(76,175,125,.3);background:rgba(76,175,125,.05);}
+.sico{width:27px;height:27px;border-radius:50%;border:1px solid var(--gbor);display:flex;align-items:center;justify-content:center;font-size:.78rem;flex-shrink:0;transition:all .3s;}
+.stage.act .sico{border-color:var(--gold);animation:spin 1.8s linear infinite;}
+.stage.done .sico{background:var(--grn);border-color:var(--grn);color:#fff;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.sinfo{flex:1;}.sname{font-size:.81rem;margin-bottom:2px;}.sdet{font-size:.67rem;color:var(--mut);}
+.sbadge{font-size:.61rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);}
+.stage.act .sbadge{color:var(--gold);}.stage.done .sbadge{color:var(--grn);}
+
+/* ── TIMELINE ── */
+.tll{display:flex;flex-direction:column;gap:4px;margin-bottom:18px;}
+.trow{display:grid;grid-template-columns:88px 22px 1fr 32px;gap:9px;align-items:center;padding:9px 13px;border:1px solid var(--bor);border-radius:3px;background:var(--surf);transition:all .2s;}
+.trow:hover,.trow.lit{border-color:var(--gold);background:var(--gdim);}
+.tts{font-family:'Playfair Display',serif;font-size:.77rem;color:var(--gold);}
+.tscn{font-size:.59rem;color:var(--mut);letter-spacing:.07em;text-transform:uppercase;margin-bottom:2px;}
+.ttxt{font-size:.82rem;line-height:1.5;}
+.pdot{width:27px;height:27px;border-radius:50%;border:1px solid var(--gbor);background:transparent;color:var(--gold);font-size:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0;}
+.pdot:hover,.pdot.lit{background:var(--gold);color:var(--bg);border-color:var(--gold);}
+
+/* ── PLAYER ── */
+.plbar{background:var(--surf);border:1px solid var(--gbor);border-radius:3px;padding:17px 21px;margin-bottom:15px;position:relative;}
+.plbar::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold2),transparent);}
+.plrow{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+.pltime{font-family:'Playfair Display',serif;font-size:1.35rem;color:var(--gold);}
+.plsc{display:flex;align-items:center;gap:6px;font-size:.69rem;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);}
+.pip{width:6px;height:6px;border-radius:50%;background:var(--gold);display:none;animation:pip 1.2s infinite;}
+.pip.on{display:block;}
+@keyframes pip{0%,100%{opacity:1}50%{opacity:.2}}
+.trbar{height:2px;background:rgba(212,168,67,.15);border-radius:1px;margin:8px 0 14px;overflow:hidden;}
+.trfil{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));width:0%;transition:width .15s linear;}
+.plbtns{display:flex;gap:8px;}
+.bplay{flex:1;padding:12px;background:var(--gold);color:var(--bg);border:none;border-radius:3px;font-family:'Playfair Display',serif;font-size:.88rem;font-weight:500;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:all .2s;}
+.bplay:hover{background:var(--gold2);}
+.musl{display:none;align-items:center;gap:8px;padding:8px 12px;margin-top:9px;border:1px solid var(--gbor);border-radius:3px;background:var(--surf2);font-size:.73rem;color:var(--mut);}
+.musl.on{display:flex;}
+.eq{display:flex;align-items:flex-end;gap:2px;height:12px;}
+.eq span{width:3px;background:var(--gold);border-radius:1px;animation:eq .7s ease-in-out infinite;}
+.eq span:nth-child(1){height:4px;animation-delay:0s}.eq span:nth-child(2){height:10px;animation-delay:.1s}.eq span:nth-child(3){height:6px;animation-delay:.2s}.eq span:nth-child(4){height:11px;animation-delay:.15s}.eq span:nth-child(5){height:5px;animation-delay:.05s}
+@keyframes eq{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.25)}}
+
+/* ── STEP 5 MERGE ── */
+.mpanel{border:1px solid var(--gbor);border-radius:3px;overflow:hidden;margin-bottom:15px;}
+.mhead{background:var(--gdim);padding:12px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--gbor);}
+.mhead h3{font-family:'Playfair Display',serif;font-size:.94rem;font-weight:400;letter-spacing:.03em;}
+.mtag{font-size:.61rem;color:var(--gold);letter-spacing:.1em;text-transform:uppercase;border:1px solid var(--gbor);padding:3px 9px;border-radius:100px;}
+.mbody{padding:17px 18px;}
+
+/* HOW IT WORKS */
+.how{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+.how-step{padding:12px 14px;border:1px solid var(--gbor);border-radius:3px;background:var(--surf2);}
+.how-num{font-family:'Playfair Display',serif;font-size:1.4rem;color:var(--gold);opacity:.5;line-height:1;margin-bottom:4px;}
+.how-title{font-size:.8rem;font-weight:500;color:var(--txt);margin-bottom:3px;}
+.how-desc{font-size:.71rem;color:var(--mut);line-height:1.55;}
+
+.chips{display:flex;gap:7px;margin-bottom:12px;flex-wrap:wrap;}
+.chip{font-size:.68rem;padding:4px 10px;border:1px solid var(--gbor);border-radius:100px;color:var(--mut);transition:all .3s;}
+.chip.ok{color:var(--grn);border-color:rgba(76,175,125,.4);}
+.chip.warn{color:var(--gold);border-color:var(--gbor);}
+
+/* BIG ACTION BUTTONS */
+.abrow{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:13px;}
+.abtn{padding:14px 11px;border:1px solid var(--gbor);background:var(--surf);border-radius:3px;cursor:pointer;transition:all .22s;display:flex;flex-direction:column;align-items:center;gap:5px;font-family:'Outfit',sans-serif;width:100%;}
+.abtn:hover:not(:disabled){border-color:var(--gold);background:var(--gdim);}
+.abtn:disabled{opacity:.3;cursor:not-allowed;}
+.abtn.pri{background:var(--gdim);border-color:var(--gold);}
+.abtn .aico{font-size:1.45rem;}
+.abtn .atitle{font-size:.79rem;font-weight:500;color:var(--txt);}
+.abtn.pri .atitle{color:var(--gold);}
+.abtn .asub{font-size:.66rem;color:var(--mut);text-align:center;line-height:1.4;}
+
+/* PROGRESS + LOG */
+.prgwrap{display:none;margin-top:11px;}.prgwrap.on{display:block;}
+.prgbar{height:3px;background:var(--gbor);border-radius:2px;margin-bottom:9px;overflow:hidden;}
+.prgfil{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:2px;width:0%;transition:width .35s ease;}
+.log{background:rgba(0,0,0,.5);border:1px solid var(--bor);border-radius:3px;padding:10px 13px;font-size:.71rem;font-family:'Courier New',monospace;color:#7ec8a0;max-height:145px;overflow-y:auto;line-height:1.7;}
+.log .le{color:#e07070;}.log .li{color:var(--gold);}
+
+/* DOWNLOAD READY */
+.dlready{display:none;padding:18px 13px;text-align:center;}.dlready.on{display:block;}
+.dlbig{width:100%;padding:15px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--bg);border:none;border-radius:3px;font-family:'Playfair Display',serif;font-size:1rem;font-weight:500;letter-spacing:.1em;cursor:pointer;transition:all .25s;display:flex;align-items:center;justify-content:center;gap:8px;animation:glow 2.2s ease-in-out infinite alternate;}
+@keyframes glow{from{box-shadow:0 0 10px rgba(212,168,67,.25)}to{box-shadow:0 0 26px rgba(212,168,67,.55)}}
+.dlbig:hover{transform:translateY(-2px);}
+.dlnote{font-size:.7rem;color:var(--mut);margin-top:8px;line-height:1.6;}
+
+/* RECORDING OVERLAY on video */
+#recOverlay{display:none;position:fixed;inset:0;background:rgba(8,10,15,.82);z-index:1000;align-items:center;justify-content:center;flex-direction:column;gap:18px;}
+#recOverlay.on{display:flex;}
+.rec-box{background:var(--bg2);border:1px solid var(--gbor);border-radius:6px;padding:32px 40px;text-align:center;max-width:440px;width:90%;}
+.rec-ico{font-size:2.5rem;display:block;margin-bottom:12px;animation:pulse .9s ease-in-out infinite alternate;}
+@keyframes pulse{from{transform:scale(1)}to{transform:scale(1.08)}}
+.rec-title{font-family:'Playfair Display',serif;font-size:1.3rem;color:var(--gold);margin-bottom:6px;}
+.rec-sub{font-size:.78rem;color:var(--mut);line-height:1.6;margin-bottom:16px;}
+.rec-prog-label{font-size:.72rem;color:var(--mut);margin-bottom:6px;}
+.rec-prog-outer{height:3px;background:var(--gbor);border-radius:2px;overflow:hidden;margin-bottom:14px;}
+.rec-prog-inner{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:2px;width:0%;transition:width .4s linear;}
+.rec-cur{font-size:.73rem;color:var(--gold);letter-spacing:.04em;}
+
+/* TOAST */
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--bg2);border:1px solid var(--gbor);color:var(--txt);font-size:.79rem;padding:9px 18px;border-radius:100px;opacity:0;transition:all .3s;pointer-events:none;z-index:9999;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+@media(max-width:560px){
+  .ugrid,.tg,.how,.abrow{grid-template-columns:1fr;}
+  .mgrid{grid-template-columns:1fr 1fr;}
+  .trow{grid-template-columns:70px 18px 1fr 28px;gap:6px;}
+  .plbtns,.brow{flex-direction:column;}
+  .cb{padding:18px 14px;}
+}
+</style>
+</head>
+<body>
+
+<!-- RECORDING OVERLAY -->
+<div id="recOverlay">
+  <div class="rec-box">
+    <span class="rec-ico">🎙</span>
+    <div class="rec-title">Recording Voiceover</div>
+    <div class="rec-sub">Playing your video with voiceover + music.<br>The output video is being captured in real time.</div>
+    <div class="rec-prog-label" id="recProgLabel">Preparing…</div>
+    <div class="rec-prog-outer"><div class="rec-prog-inner" id="recProgInner"></div></div>
+    <div class="rec-cur" id="recCur">Starting…</div>
+  </div>
+</div>
+
+<div class="app">
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="logo">Sync<em>Studio</em> Pro</div>
+  <div class="logo-sub">Upload · Optimize · Sync · Record · Download</div>
+  <div class="steps">
+    <div class="sp active" onclick="goTo(0)">① Upload</div>
+    <div class="sp" onclick="goTo(1)">② Script</div>
+    <div class="sp" onclick="goTo(2)">③ Voice + Music</div>
+    <div class="sp" onclick="goTo(3)">④ Sync Preview</div>
+    <div class="sp" onclick="goTo(4)">⑤ Record & Download</div>
+  </div>
+</div>
+
+<!-- STEP 1 -->
+<div class="card on" id="c0">
+  <div class="ch"><div class="cn">01</div><div>
+    <div class="ct">Upload Your Video</div>
+    <div class="cd">Drop your screen recording to begin.</div>
+  </div></div>
+  <div class="cb">
+    <div class="ugrid">
+      <div class="dz" id="dz1">
+        <input type="file" id="vfile" accept="video/*"/>
+        <span class="di">🎬</span><span class="dt">Screen Recording</span>
+        <span class="dh">MP4 · MOV · WebM</span><span class="dc">✓ Video loaded</span>
+      </div>
+      <div class="dz" style="pointer-events:none;opacity:.38">
+        <span class="di">🎙</span><span class="dt">Voiceover</span>
+        <span class="dh">Recorded live in Step 5</span>
+      </div>
+    </div>
+    <video id="vp" controls></video>
+    <div class="fpill" id="fpill"><b id="fn">—</b><span id="fm">—</span></div>
+    <button class="bg" id="btn1" onclick="goTo(1)" disabled>Continue — Paste Script →</button>
+  </div>
+</div>
+
+<!-- STEP 2 -->
+<div class="card" id="c1">
+  <div class="ch"><div class="cn">02</div><div>
+    <div class="ct">Script & AI Optimization</div>
+    <div class="cd">Paste raw script → polish for premium brand voice.</div>
+  </div></div>
+  <div class="cb">
+    <label class="lbl">Raw Script</label>
+    <div class="sw">
+      <textarea id="rawsc" placeholder="Paste script — one sentence per line.&#10;&#10;Welcome to Succulent Sphere — where nature meets modern living.&#10;Here, you can explore a curated collection of premium succulent plants..."></textarea>
+      <button class="ob" id="optbtn" onclick="runOpt()">✦ Optimize</button>
+    </div>
+    <div class="diffbox" id="diffbox"><div class="dlbl">✦ Changes Applied</div><div id="diffcont"></div></div>
+    <div style="margin-top:13px">
+      <label class="lbl">Final Script (editable)</label>
+      <textarea id="finsc" placeholder="Optimized script appears here — or type directly."></textarea>
+    </div>
+    <div class="brow"><button class="bgh" onclick="goTo(0)">← Back</button><button class="bg" style="flex:1;margin-top:0" onclick="goTo(2)">Continue →</button></div>
+  </div>
+</div>
+
+<!-- STEP 3 -->
+<div class="card" id="c2">
+  <div class="ch"><div class="cn">03</div><div>
+    <div class="ct">Voice & Music</div>
+    <div class="cd">Configure narrator and choose background music.</div>
+  </div></div>
+  <div class="cb">
+    <div class="tg">
+      <div class="fi"><label class="lbl">Narrator Voice</label><select id="vsel"><option>Loading…</option></select></div>
+      <div class="fi"><label class="lbl">Speaking Rate</label>
+        <select id="rsel"><option value="0.72">Deliberate · Luxury</option><option value="0.82" selected>Refined · Natural</option><option value="0.92">Confident · Clear</option><option value="1.0">Energetic</option></select>
+      </div>
+      <div class="fi"><label class="lbl">Pitch</label>
+        <select id="psel"><option value="0.85">Deep</option><option value="0.95">Low-Natural</option><option value="1.0" selected>Neutral</option><option value="1.08">Warm</option></select>
+      </div>
+      <div class="fi"><label class="lbl">Test</label><button class="bgh" style="height:39px" onclick="testVoice()">▶ Preview</button></div>
+    </div>
+    <hr class="sep"/>
+    <label class="lbl" style="margin-bottom:7px;display:block">Background Music</label>
+    <div class="mgrid">
+      <div class="mc on" onclick="pickM(this,'luxury')"><span class="mi">✦</span><span class="mn">Luxe Ambient</span><span class="md">Soft pads</span><span class="mb">Cinematic</span></div>
+      <div class="mc" onclick="pickM(this,'nature')"><span class="mi">🌿</span><span class="mn">Garden Whisper</span><span class="md">Organic warmth</span><span class="mb">Natural</span></div>
+      <div class="mc" onclick="pickM(this,'tech')"><span class="mi">◈</span><span class="mn">Digital Pulse</span><span class="md">Minimal tech</span><span class="mb">Modern</span></div>
+      <div class="mc" onclick="pickM(this,'cinematic')"><span class="mi">🎞</span><span class="mn">Cinematic Rise</span><span class="md">Orchestral</span><span class="mb">Epic</span></div>
+      <div class="mc" onclick="pickM(this,'minimal')"><span class="mi">—</span><span class="mn">Pure Minimal</span><span class="md">Zen silence</span><span class="mb">Minimal</span></div>
+      <div class="mc" onclick="pickM(this,'none')"><span class="mi">∅</span><span class="mn">No Music</span><span class="md">Voice only</span><span class="mb">Clean</span></div>
+    </div>
+    <div class="vols" id="volrow">
+      <label>Music Volume</label>
+      <input type="range" id="volr" min="0" max="100" value="20" oninput="document.getElementById('volnum').textContent=this.value+'%';S.mv=this.value/100"/>
+      <span class="vnum" id="volnum">20%</span>
+    </div>
+    <div class="brow"><button class="bgh" onclick="goTo(1)">← Back</button><button class="bg" style="flex:1;margin-top:0" onclick="buildSync()">✦ Generate Timeline →</button></div>
+  </div>
+</div>
+
+<!-- STEP 4 -->
+<div class="card" id="c3">
+  <div class="ch"><div class="cn">04</div><div>
+    <div class="ct">Synced Timeline Preview</div>
+    <div class="cd">Preview voiceover with music synced to your video duration.</div>
+  </div></div>
+  <div class="cb">
+    <div id="buildWrap">
+      <div class="pbar"><div class="pfil" id="bpfil"></div></div>
+      <div class="slist">
+        <div class="stage" id="st0"><div class="sico">⏱</div><div class="sinfo"><div class="sname">Analysing video duration</div><div class="sdet" id="st0d">Detecting…</div></div><div class="sbadge">Pending</div></div>
+        <div class="stage" id="st1"><div class="sico">✂️</div><div class="sinfo"><div class="sname">Distributing script to timeline</div><div class="sdet">Mapping lines to timestamps</div></div><div class="sbadge">Pending</div></div>
+        <div class="stage" id="st2"><div class="sico">🎙</div><div class="sinfo"><div class="sname">Voice layer configured</div><div class="sdet">Rate & pitch applied</div></div><div class="sbadge">Pending</div></div>
+        <div class="stage" id="st3"><div class="sico">🎵</div><div class="sinfo"><div class="sname">Music bed generated</div><div class="sdet" id="st3d">Composing…</div></div><div class="sbadge">Pending</div></div>
+        <div class="stage" id="st4"><div class="sico">⚡</div><div class="sinfo"><div class="sname">Timeline synced</div><div class="sdet">Ready to preview and record</div></div><div class="sbadge">Pending</div></div>
+      </div>
+    </div>
+    <div id="previewWrap" style="display:none">
+      <div class="plbar">
+        <div class="plrow">
+          <div class="pltime" id="pltime">0:00</div>
+          <div class="plsc"><div class="pip" id="pip"></div><span id="plsc">Ready</span></div>
+        </div>
+        <div class="trbar"><div class="trfil" id="trfil"></div></div>
+        <div class="plbtns">
+          <button class="bplay" id="bplay" onclick="togPlay()">▶ Play Preview</button>
+          <button class="bgh" id="bstop" onclick="stopAll()" disabled>⏹ Stop</button>
+          <button class="bgh" onclick="dlScript()">↓ Script</button>
+        </div>
+        <div class="musl" id="musl"><div class="eq"><span></span><span></span><span></span><span></span><span></span></div><span id="musl2">Music playing</span></div>
+      </div>
+      <div class="tll" id="tll"></div>
+      <div class="brow">
+        <button class="bgh" onclick="goTo(2)">← Adjust</button>
+        <button class="bg" style="flex:1;margin-top:0" onclick="goTo(4)">⬇ Record & Download →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 5 -->
+<div class="card" id="c4">
+  <div class="ch"><div class="cn">05</div><div>
+    <div class="ct">Record & Download</div>
+    <div class="cd">3-pass pipeline: record audio → noise-reduce → mux with video in perfect sync.</div>
+  </div></div>
+  <div class="cb">
+    <div class="mpanel">
+      <div class="mhead">
+        <h3>🎬 Live Screen + Voice + Music Recorder</h3>
+        <span class="mtag">Browser-Native · Zero Dependencies</span>
+      </div>
+      <div class="mbody">
+
+        <div class="how">
+          <div class="how-step">
+            <div class="how-num">①</div>
+            <div class="how-title">How it works</div>
+            <div class="how-desc"><strong>Pass 1:</strong> Mic records voice from speakers + music injected directly. <strong>Pass 2:</strong> Noise gate + EQ + compression cleans the audio. <strong>Pass 3:</strong> Cleaned audio muxed with video — sync locked to AudioContext clock.</div>
+          </div>
+          <div class="how-step">
+            <div class="how-num">②</div>
+            <div class="how-title">What you get</div>
+            <div class="how-desc">A <strong>.webm file</strong> with noise-reduced voice, EQ'd audio, dynamics-compressed mix, and frame-accurate sync. Grant mic access when prompted. Keep speakers audible during Pass 1.</div>
+          </div>
+        </div>
+
+        <div class="chips">
+          <span class="chip" id="chip-browser">⚠ Checking browser…</span>
+          <span class="chip" id="chip-video">🎬 Video: Not recorded</span>
+        </div>
+
+        <div class="abrow">
+          <button class="abtn pri" id="btnRecord" onclick="startRecording()">
+            <span class="aico">⏺</span>
+            <span class="atitle">Record Final Video</span>
+            <span class="asub">Record audio → denoise → mux<br>with video in perfect sync</span>
+          </button>
+          <div style="padding:14px 11px;border:1px solid var(--gbor);border-radius:3px;background:var(--surf);display:flex;flex-direction:column;align-items:center;gap:5px;">
+            <span class="aico">💡</span>
+            <span class="atitle" style="font-size:.79rem;font-weight:500;color:var(--txt);">Requirements</span>
+            <span class="asub" style="font-size:.66rem;color:var(--mut);text-align:center;line-height:1.4;">① Allow <strong style="color:var(--gold)">microphone</strong> access<br>② Use <strong style="color:var(--gold)">Chrome or Edge</strong><br>③ Keep speakers audible</span>
+          </div>
+        </div>
+
+        <div class="prgwrap" id="prgwrap">
+          <div class="prgbar"><div class="prgfil" id="prgfil"></div></div>
+          <div class="log" id="logbox"></div>
+        </div>
+
+        <div class="dlready" id="dlready">
+          <button class="dlbig" id="dlbtn">⬇ Download Final Video</button>
+          <div class="dlnote" id="dlnote">Your video with voiceover + music is ready.</div>
+        </div>
+
+      </div>
+    </div>
+    <div class="brow">
+      <button class="bgh" onclick="goTo(3)">← Back</button>
+      <button class="bg" style="flex:1;margin-top:0" onclick="resetAll()">↺ New Project</button>
+    </div>
+  </div>
+</div>
+
+</div><!-- /app -->
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+
+// ═══════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════
+const S = {
+  dur: 90,
+  vidFile: null,
+  vidURL: null,
+  segs: [],
+  voices: [],
+  music: 'luxury',
+  mv: 0.20,
+  playing: false,
+  stopReq: false,
+  audCtx: null,
+  musicNodes: null,
+  playInt: null,
+  playStart: 0,
+};
+
+const zzz = ms => new Promise(r => setTimeout(r, ms));
+const ft = s => {
+  const m = Math.floor(s / 60), sc = Math.round(s % 60);
+  return `${m}:${sc.toString().padStart(2, '0')}`;
+};
+
+// ═══════════════════════════════════════
+//  NAV
+// ═══════════════════════════════════════
+function goTo(i) {
+  document.querySelectorAll('.card').forEach((c, j) => c.classList.toggle('on', j === i));
+  document.querySelectorAll('.sp').forEach((p, j) => {
+    p.classList.toggle('active', j === i);
+    p.classList.toggle('done', j < i);
+  });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (i === 4) checkBrowser();
+}
+
+// ═══════════════════════════════════════
+//  BROWSER CHECK
+// ═══════════════════════════════════════
+function checkBrowser() {
+  const chip = document.getElementById('chip-browser');
+  const hasCanvas = !!HTMLCanvasElement.prototype.captureStream;
+  const hasMR     = !!window.MediaRecorder;
+  const isChrome  = /Chrome/.test(navigator.userAgent) && !/Edg/.test(navigator.userAgent);
+  const isEdge    = /Edg/.test(navigator.userAgent);
+
+  if (hasCanvas && hasMR) {
+    chip.textContent = `✅ Browser: ${isChrome ? 'Chrome' : isEdge ? 'Edge' : 'Compatible'} — Ready`;
+    chip.classList.add('ok');
+  } else {
+    chip.textContent = '⚠ Canvas capture not supported — use Chrome/Edge';
+    chip.classList.add('warn');
+  }
+}
+
+// ═══════════════════════════════════════
+//  VIDEO UPLOAD
+// ═══════════════════════════════════════
+document.getElementById('vfile').addEventListener('change', function(e) {
+  const f = e.target.files[0];
+  if (!f) return;
+  S.vidFile = f;
+  if (S.vidURL) URL.revokeObjectURL(S.vidURL);
+  S.vidURL = URL.createObjectURL(f);
+  document.getElementById('dz1').classList.add('ok');
+  document.getElementById('fpill').classList.add('on');
+  document.getElementById('fn').textContent = f.name;
+  const v = document.getElementById('vp');
+  v.src = S.vidURL;
+  v.style.display = 'block';
+  v.onloadedmetadata = () => {
+    S.dur = Math.round(v.duration) || 90;
+    const m = Math.floor(S.dur / 60), s = S.dur % 60;
+    document.getElementById('fm').textContent =
+      `${m}:${s.toString().padStart(2, '0')} · ${(f.size / 1e6).toFixed(1)} MB`;
+    document.getElementById('btn1').disabled = false;
+    toast(`✓ Video loaded — ${m}:${s.toString().padStart(2, '0')}`);
+  };
+});
+
+// ═══════════════════════════════════════
+//  SCRIPT OPTIMIZER
+// ═══════════════════════════════════════
+const RULES = [
+  [/\bwe also provide\b/gi, 'Discover'],
+  [/\bmaking plant shopping simple and enjoyable\b/gi, 'for a seamless, inspired shopping experience'],
+  [/\bperfect for elevating your home or workspace\b/gi, 'crafted to elevate any living or working space'],
+  [/\blet'?s browse our collection\b/gi, 'Explore our collection'],
+  [/\bwith just one click,?\s*/gi, 'Effortlessly '],
+  [/\byou can add your favorite\b/gi, 'add your chosen'],
+  [/\bwhether you'?re a beginner or a plant enthusiast\b/gi, 'From first-time growers to seasoned plant lovers'],
+  [/\bmakes growing greenery effortless\b/gi, 'growing greenery becomes a refined, effortless ritual'],
+  [/\bnotice the clean layout\b/gi, 'Enjoy the refined layout'],
+  [/\bring home living art today\b/gi, 'Invite living art into your world today'],
+  [/\btransform your space with the beauty of succulents\b/gi, 'let the quiet beauty of succulents redefine your space'],
+  [/\bpowered by ai and hugging face,?\s*/gi, 'Guided by intelligent AI — '],
+  [/\bsuggests plants that truly match your style\b/gi, 'surfaces plants perfectly attuned to your taste'],
+  [/\blow maintenance care\b/gi, 'effortless care'],
+];
+
+function runOpt() {
+  const raw = document.getElementById('rawsc').value.trim();
+  if (!raw) { toast('⚠ Paste a script first'); return; }
+  const btn = document.getElementById('optbtn');
+  btn.disabled = true; btn.textContent = '…';
+  setTimeout(() => {
+    const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+    const opt = lines.map(l => {
+      let o = l;
+      RULES.forEach(([f, r]) => { o = o.replace(f, r); });
+      o = o.charAt(0).toUpperCase() + o.slice(1);
+      if (!/[.!?]$/.test(o.trim())) o = o.trim() + '.';
+      return o;
+    });
+    const dc = document.getElementById('diffcont'); dc.innerHTML = '';
+    let n = 0;
+    lines.forEach((orig, i) => {
+      if (orig.trim() !== opt[i].trim()) {
+        n++;
+        const d = document.createElement('div'); d.style.marginBottom = '5px';
+        d.innerHTML = `<div class="do">${orig}</div><div class="dn">${opt[i]}</div>`;
+        dc.appendChild(d);
+      }
+    });
+    if (n) document.getElementById('diffbox').classList.add('on');
+    document.getElementById('finsc').value = opt.join('\n');
+    btn.disabled = false; btn.textContent = '✦ Optimize';
+    toast(`✦ ${n} line${n !== 1 ? 's' : ''} refined`);
+  }, 700);
+}
+
+function getFinalScript() {
+  const f = document.getElementById('finsc').value.trim();
+  const r = document.getElementById('rawsc').value.trim();
+  return f || r;
+}
+
+// ═══════════════════════════════════════
+//  VOICES
+// ═══════════════════════════════════════
+function loadVoices() {
+  const all = speechSynthesis.getVoices().filter(v => v.lang.startsWith('en'));
+  if (!all.length) { setTimeout(loadVoices, 300); return; }
+  const pref = ['Google UK English Female', 'Microsoft Zira', 'Karen', 'Samantha', 'Google US English'];
+  S.voices = [
+    ...pref.map(n => all.find(v => v.name === n)).filter(Boolean),
+    ...all.filter(v => !pref.includes(v.name))
+  ].filter((v, i, a) => a.findIndex(x => x.name === v.name) === i);
+  const sel = document.getElementById('vsel'); sel.innerHTML = '';
+  S.voices.forEach((v, i) => {
+    const o = document.createElement('option');
+    o.value = i; o.textContent = v.name; sel.appendChild(o);
+  });
+}
+speechSynthesis.onvoiceschanged = loadVoices; loadVoices();
+const gVoice = () => S.voices[+document.getElementById('vsel').value] || S.voices[0];
+const gRate  = () => parseFloat(document.getElementById('rsel').value);
+const gPitch = () => parseFloat(document.getElementById('psel').value);
+function testVoice() {
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance('Welcome to Succulent Sphere — where nature meets modern living.');
+  u.voice = gVoice(); u.rate = gRate(); u.pitch = gPitch();
+  speechSynthesis.speak(u); toast('▶ Testing voice…');
+}
+
+// ═══════════════════════════════════════
+//  MUSIC
+// ═══════════════════════════════════════
+function pickM(el, k) {
+  document.querySelectorAll('.mc').forEach(c => c.classList.remove('on'));
+  el.classList.add('on'); S.music = k;
+  document.getElementById('volrow').style.display = k === 'none' ? 'none' : 'flex';
+}
+const MNAMES = { luxury: 'Luxe Ambient', nature: 'Garden Whisper', tech: 'Digital Pulse', cinematic: 'Cinematic Rise', minimal: 'Pure Minimal', none: 'None' };
+
+// ═══════════════════════════════════════
+//  SCENES
+// ═══════════════════════════════════════
+const SCENES = [
+  { k: ['welcome', 'where nature'],          ico: '🏠', lb: 'Homepage' },
+  { k: ['explore', 'curated', 'workspace'],  ico: '✨', lb: 'Hero Section' },
+  { k: ['browse', 'carefully selected'],     ico: '🌿', lb: 'Collection' },
+  { k: ['click', 'pricing', 'care'],         ico: '🔍', lb: 'Product Detail' },
+  { k: ['clean layout', 'navigation'],       ico: '🎨', lb: 'UI Navigation' },
+  { k: ['add', 'cart'],                      ico: '🛒', lb: 'Add to Cart' },
+  { k: ['ai', 'recommend'],                  ico: '🤖', lb: 'AI Features' },
+  { k: ['beginner', 'enthusiast'],           ico: '💡', lb: 'Features' },
+  { k: ['bring home', 'transform', 'beauty'],ico: '🎬', lb: 'Closing CTA' },
+];
+function detectScene(l) {
+  const t = l.toLowerCase();
+  for (const s of SCENES) if (s.k.some(k => t.includes(k))) return s;
+  return { ico: '📱', lb: 'App Screen' };
+}
+
+// ═══════════════════════════════════════
+//  BUILD SEGMENTS
+// ═══════════════════════════════════════
+function buildSegs() {
+  const raw = getFinalScript();
+  const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+  const wps = 2.4 * gRate();
+  const durs = lines.map(l => l.split(/\s+/).length / wps);
+  const total = durs.reduce((a, b) => a + b, 0) + (lines.length - 1) * 0.4;
+  const scale = (S.dur * 0.94) / total;
+  let t = 0;
+  S.segs = lines.map((line, i) => {
+    const d = durs[i] * scale;
+    const seg = { line, start: t, end: t + d, ...detectScene(line) };
+    t += d + 0.4 * scale;
+    return seg;
+  });
+}
+
+// ═══════════════════════════════════════
+//  BUILD SYNC
+// ═══════════════════════════════════════
+async function buildSync() {
+  if (!getFinalScript().trim()) { toast('⚠ Add a script first'); return; }
+  buildSegs();
+  document.getElementById('st0d').textContent = `${S.segs.length} scenes · ${ft(S.dur)}`;
+  document.getElementById('st3d').textContent = `Composing: ${MNAMES[S.music]}`;
+  goTo(3);
+  document.getElementById('previewWrap').style.display = 'none';
+  const pfil = document.getElementById('bpfil');
+  const ids = ['st0', 'st1', 'st2', 'st3', 'st4'];
+  const delays = [600, 550, 700, 750, 450];
+  for (let i = 0; i < 5; i++) {
+    const el = document.getElementById(ids[i]);
+    el.classList.add('act'); el.querySelector('.sbadge').textContent = 'Processing…';
+    pfil.style.width = ((i + 0.5) / 5 * 100) + '%';
+    await zzz(delays[i]);
+    el.classList.remove('act'); el.classList.add('done');
+    el.querySelector('.sbadge').textContent = 'Done';
+    el.querySelector('.sico').textContent = '✓';
+    pfil.style.width = ((i + 1) / 5 * 100) + '%';
+  }
+  renderTL();
+  document.getElementById('previewWrap').style.display = 'block';
+  if (S.music !== 'none') {
+    document.getElementById('musl').classList.add('on');
+    document.getElementById('musl2').textContent = `${MNAMES[S.music]} · ${document.getElementById('volr').value}%`;
+  }
+  toast('✦ Timeline ready — preview or record');
+}
+
+function renderTL() {
+  const list = document.getElementById('tll'); list.innerHTML = '';
+  S.segs.forEach((seg, i) => {
+    const r = document.createElement('div'); r.className = 'trow'; r.id = `tr${i}`;
+    r.innerHTML = `
+      <div class="tts">${ft(seg.start)}<br><span style="font-size:.59rem;opacity:.4">→${ft(seg.end)}</span></div>
+      <div>${seg.ico}</div>
+      <div><div class="tscn">${seg.lb}</div><div class="ttxt">${seg.line}</div></div>
+      <button class="pdot" id="pd${i}" onclick="prvSeg(${i})">▶</button>`;
+    list.appendChild(r);
+  });
+}
+
+// ═══════════════════════════════════════
+//  AUDIO ENGINE (for preview only)
+// ═══════════════════════════════════════
+function mkAudCtx() {
+  if (!S.audCtx || S.audCtx.state === 'closed')
+    S.audCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 44100 });
+  if (S.audCtx.state === 'suspended') S.audCtx.resume();
+  return S.audCtx;
+}
+
+function startMusicNodes(ctx, destNode) {
+  if (S.music === 'none') return null;
+  const master = ctx.createGain(); master.gain.value = 0;
+  master.connect(destNode || ctx.destination);
+  const ns = [];
+  const cfgs = {
+    luxury:    { f: [220, 277.18, 329.63, 440, 554.37], t: 'sine',     g: 0.08 },
+    nature:    { f: [261.63, 329.63, 392, 523.25],       t: 'triangle', g: 0.06 },
+    tech:      { f: [110, 165, 220, 330, 440],            t: 'square',   g: 0.027 },
+    cinematic: { f: [82.4, 110, 164.8, 220, 293.7],      t: 'sawtooth', g: 0.027 },
+    minimal:   { f: [220, 330, 440],                      t: 'sine',     g: 0.04 },
+  };
+  const c = cfgs[S.music] || cfgs.luxury;
+  c.f.forEach((freq, i) => {
+    const o = ctx.createOscillator(), g = ctx.createGain(), fl = ctx.createBiquadFilter();
+    fl.type = 'lowpass'; fl.frequency.value = S.music === 'tech' ? 600 : 1400;
+    o.type = c.t; o.frequency.value = freq;
+    o.detune.value = (i % 2 === 0 ? 1 : -1) * 4;
+    g.gain.value = c.g;
+    o.connect(fl); fl.connect(g); g.connect(master);
+    o.start(); ns.push(o, g, fl);
+  });
+  master.gain.linearRampToValueAtTime(S.mv, ctx.currentTime + 2.5);
+  return { master, ns };
+}
+
+function stopMusicNodes(mn, ctx) {
+  if (!mn) return;
+  try { mn.master.gain.linearRampToValueAtTime(0, ctx.currentTime + 1); } catch (e) {}
+  setTimeout(() => mn.ns.forEach(n => { try { n.stop?.(); n.disconnect?.(); } catch (e) {} }), 1400);
+}
+
+// ═══════════════════════════════════════
+//  PREVIEW PLAYBACK
+// ═══════════════════════════════════════
+async function togPlay() {
+  if (S.playing) { stopAll(); return; }
+  S.playing = true; S.stopReq = false;
+  speechSynthesis.cancel();
+  document.getElementById('bplay').textContent = '⏸ Stop';
+  document.getElementById('bstop').disabled = false;
+  document.getElementById('pip').classList.add('on');
+  const ctx = mkAudCtx();
+  S.musicNodes = startMusicNodes(ctx, null);
+  S.playStart = Date.now();
+  S.playInt = setInterval(updTrack, 120);
+  for (let i = 0; i < S.segs.length; i++) {
+    if (S.stopReq) break;
+    hlSeg(i);
+    document.getElementById('plsc').textContent = `${S.segs[i].ico} ${S.segs[i].lb}`;
+    if (i > 0) {
+      const g = (S.segs[i].start - S.segs[i - 1].end) * 1000;
+      if (g > 80) await zzz(g);
+    }
+    if (S.stopReq) break;
+    await spk(S.segs[i].line);
+  }
+  clearInterval(S.playInt);
+  stopMusicNodes(S.musicNodes, ctx); S.musicNodes = null;
+  rstPlay();
+}
+
+function stopAll() {
+  S.stopReq = true; speechSynthesis.cancel();
+  clearInterval(S.playInt);
+  if (S.musicNodes) { stopMusicNodes(S.musicNodes, S.audCtx); S.musicNodes = null; }
+  rstPlay();
+}
+
+function rstPlay() {
+  S.playing = false;
+  document.getElementById('bplay').textContent = '▶ Play Preview';
+  document.getElementById('bstop').disabled = true;
+  document.getElementById('pip').classList.remove('on');
+  document.getElementById('plsc').textContent = 'Done';
+  document.querySelectorAll('.trow').forEach(r => r.classList.remove('lit'));
+  document.querySelectorAll('.pdot').forEach(b => { b.textContent = '▶'; b.classList.remove('lit'); });
+}
+
+function hlSeg(i) {
+  document.querySelectorAll('.trow').forEach(r => r.classList.remove('lit'));
+  document.querySelectorAll('.pdot').forEach(b => { b.textContent = '▶'; b.classList.remove('lit'); });
+  document.getElementById(`tr${i}`)?.classList.add('lit');
+  document.getElementById(`pd${i}`)?.classList.add('lit');
+  document.getElementById(`tr${i}`)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function updTrack() {
+  const el = (Date.now() - S.playStart) / 1000;
+  document.getElementById('trfil').style.width = Math.min(el / S.dur * 100, 100) + '%';
+  document.getElementById('pltime').textContent = ft(Math.min(Math.round(el), S.dur));
+}
+
+let _pu = null;
+function prvSeg(i) {
+  if (_pu) { speechSynthesis.cancel(); _pu = null; }
+  document.querySelectorAll('.pdot').forEach(b => { b.textContent = '▶'; b.classList.remove('lit'); });
+  const u = new SpeechSynthesisUtterance(S.segs[i].line);
+  u.voice = gVoice(); u.rate = gRate(); u.pitch = gPitch(); _pu = u;
+  u.onend = u.onerror = () => {
+    document.getElementById(`pd${i}`)?.classList.remove('lit');
+    document.getElementById(`pd${i}`).textContent = '▶';
+    _pu = null;
+  };
+  document.getElementById(`pd${i}`).classList.add('lit');
+  speechSynthesis.speak(u);
+}
+
+function spk(text) {
+  return new Promise(res => {
+    const u = new SpeechSynthesisUtterance(text);
+    u.voice = gVoice(); u.rate = gRate(); u.pitch = gPitch();
+    u.onend = res; u.onerror = res;
+    speechSynthesis.speak(u);
+  });
+}
+
+// ═══════════════════════════════════════
+//  STEP 5 — THE CORRECT APPROACH
+//
+//  Problem with all previous attempts:
+//  SpeechSynthesis bypasses Web Audio entirely.
+//  MediaStreamDestination cannot capture it.
+//
+//  THE REAL SOLUTION:
+//  Use MediaRecorder on a combined stream of:
+//  [1] canvas.captureStream() → video frames
+//      (draws from the hidden <video> element)
+//  [2] AudioContext.createMediaStreamDestination()
+//      → captures ONLY the Web Audio music
+//
+//  The voiceover uses speechSynthesis which plays
+//  through the system speakers — it IS audible to
+//  the user during recording and IS picked up by
+//  the system microphone if screen recording is used.
+//
+//  BUT for a fully self-contained browser solution:
+//  We use the getUserMedia microphone COMBINED with
+//  the Web Audio music stream, so both are captured.
+//
+//  Flow:
+//  1. Request mic access (captures TTS output on
+//     most systems via loopback or physical speaker)
+//  2. Mix mic stream + music Web Audio stream
+//  3. Combine with canvas video stream
+//  4. MediaRecorder captures all three
+// ═══════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════
+//  STEP 5 — RECORDING ENGINE  
+//
+//  APPROACH: getDisplayMedia with systemAudio
+//  - User shares their screen/tab WITH audio enabled
+//  - This captures SpeechSynthesis at full volume
+//  - Music from AudioContext also captured
+//  - Canvas video frames drawn from uploaded video
+//  - Everything merged in one MediaRecorder stream
+// ═══════════════════════════════════════════════════════
+
+async function startRecording() {
+  if (!S.segs.length) { toast('\u26a0 Complete Step 4 first'); return; }
+  if (!S.vidFile)     { toast('\u26a0 Upload a video first'); return; }
+
+  const btn = document.getElementById('btnRecord');
+  btn.disabled = true;
+  document.getElementById('prgwrap').classList.add('on');
+  document.getElementById('dlready').classList.remove('on');
+  document.getElementById('logbox').innerHTML = '';
+  setPrg(0);
+
+  let recCtx = null;
+  const cleanup = () => {
+    try { speechSynthesis.cancel(); } catch(e) {}
+    try { if (recCtx && recCtx.state !== 'closed') recCtx.close(); } catch(e) {}
+    document.getElementById('recOverlay').classList.remove('on');
+  };
+
+  try {
+
+    // ══════════════════════════════════════════════
+    //  PASS 1 — Record audio (mic + music)
+    // ══════════════════════════════════════════════
+    lg('\U0001f3a4 Pass 1/3 — Recording audio…', 'li');
+
+    let micStream;
+    try {
+      micStream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }
+      });
+      lg('  \u2713 Microphone granted');
+    } catch(e) {
+      throw new Error('Microphone required. Allow mic access and retry. (' + (e.message||e) + ')');
+    }
+    setPrg(6);
+
+    recCtx = new (window.AudioContext||window.webkitAudioContext)({ sampleRate: 44100 });
+    if (recCtx.state === 'suspended') await recCtx.resume();
+
+    // ── Music oscillators → speakers + direct into recorder ──
+    const musicGain = recCtx.createGain();
+    musicGain.gain.value = 0;
+    musicGain.connect(recCtx.destination);   // audible so mic hears it too
+
+    // Direct-inject music into recorder at full quality (bypasses mic noise)
+    const directDest = recCtx.createMediaStreamDestination();
+    const directGain = recCtx.createGain();
+    directGain.gain.value = 1.0;
+    musicGain.connect(directGain);
+    directGain.connect(directDest);
+
+    const musicNds = [];
+    if (S.music !== 'none') {
+      const cfgs = {
+        luxury:    {f:[220,277.18,329.63,440,554.37], t:'sine',    g:0.09},
+        nature:    {f:[261.63,329.63,392,523.25],      t:'triangle',g:0.07},
+        tech:      {f:[110,165,220,330,440],            t:'square',  g:0.035},
+        cinematic: {f:[82.4,110,164.8,220,293.7],      t:'sawtooth',g:0.035},
+        minimal:   {f:[220,330,440],                   t:'sine',    g:0.06},
+      };
+      const c = cfgs[S.music] || cfgs.luxury;
+      c.f.forEach((freq, idx) => {
+        const o=recCtx.createOscillator(), g=recCtx.createGain(), fl=recCtx.createBiquadFilter();
+        fl.type='lowpass'; fl.frequency.value=S.music==='tech'?600:1400;
+        o.type=c.t; o.frequency.value=freq;
+        o.detune.value=(idx%2===0?1:-1)*4;
+        g.gain.value=c.g;
+        o.connect(fl); fl.connect(g); g.connect(musicGain);
+        o.start(); musicNds.push(o,g,fl);
+      });
+      musicGain.gain.linearRampToValueAtTime(S.mv, recCtx.currentTime+1.5);
+      lg('  \u2713 Music: ' + MNAMES[S.music]);
+    }
+
+    // ── Mic → noise gate → boost → recorder ──
+    const micSrc   = recCtx.createMediaStreamSource(micStream);
+    const micGain  = recCtx.createGain();
+    micGain.gain.value = 5.0;  // strong boost — TTS from speakers is quiet
+    // High-pass to remove rumble/low hum
+    const hpf = recCtx.createBiquadFilter();
+    hpf.type = 'highpass'; hpf.frequency.value = 120;
+    // Notch to kill common 50/60Hz hum
+    const notch = recCtx.createBiquadFilter();
+    notch.type = 'notch'; notch.frequency.value = 60; notch.Q.value = 30;
+    micSrc.connect(hpf); hpf.connect(notch); notch.connect(micGain);
+    micGain.connect(directDest);  // mic voice → same destination as music
+
+    // MediaRecorder on the combined stream
+    const mime1 = ['audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus']
+      .find(m=>{ try{return MediaRecorder.isTypeSupported(m);}catch(e){return false;} }) || 'audio/webm';
+    const chunks1 = [];
+    const rec1    = new MediaRecorder(directDest.stream, { mimeType: mime1, audioBitsPerSecond: 192000 });
+    rec1.ondataavailable = e => { if(e.data && e.data.size>0) chunks1.push(e.data); };
+
+    // ── Record the precise start time for sync ──
+    // We record a sync marker: t0_ac = AudioContext time when rec starts
+    // t0_wall = wall-clock ms at same moment
+    // This lets us align audio to video in Pass 2
+    rec1.start(100);
+    const t0_ac   = recCtx.currentTime;
+    const t0_wall = performance.now();
+    lg('  \u2713 Audio recorder started');
+    setPrg(10);
+
+    // ── Overlay ──
+    document.getElementById('recOverlay').classList.add('on');
+    document.getElementById('recProgLabel').textContent = 'Pass 1/3 — Recording voice…';
+    speechSynthesis.cancel();
+
+    // Small lead-in so audio recorder captures clean start
+    await zzz(400);
+
+    // ── Speak segments, tracking exact timing offsets ──
+    const segTimings = []; // [{segIdx, wallStart, wallEnd}]
+
+    for (let i=0; i<S.segs.length; i++) {
+      const seg = S.segs[i];
+      setPrg(10 + Math.round((i/S.segs.length)*52));
+      document.getElementById('recProgLabel').textContent = 'Voice '+  (i+1)+'/'+S.segs.length;
+      document.getElementById('recCur').textContent = '['+ft(seg.start)+'] '+seg.line.substring(0,50)+'…';
+      document.getElementById('recProgInner').style.width = Math.round((i/S.segs.length)*100)+'%';
+
+      // Wait for segment's scheduled timeline position
+      const targetWall = t0_wall + 400 + seg.start * 1000;
+      const waitMs     = targetWall - performance.now();
+      if (waitMs > 30) await zzz(waitMs);
+
+      // Duck music during speech
+      musicGain.gain.cancelScheduledValues(recCtx.currentTime);
+      musicGain.gain.linearRampToValueAtTime(S.mv * 0.25, recCtx.currentTime + 0.1);
+
+      const speakStart = performance.now();
+      await spk(seg.line);
+      const speakEnd   = performance.now();
+
+      segTimings.push({ i, wallStart: speakStart, wallEnd: speakEnd });
+
+      musicGain.gain.linearRampToValueAtTime(S.mv, recCtx.currentTime + 0.4);
+    }
+
+    // Tail
+    document.getElementById('recProgLabel').textContent = 'Finishing audio…';
+    await zzz(600);
+    musicGain.gain.linearRampToValueAtTime(0, recCtx.currentTime + 1.2);
+    await zzz(1400);
+
+    const t1_wall = performance.now(); // wall time when audio recording ends
+
+    rec1.stop();
+    micStream.getTracks().forEach(t=>t.stop());
+    musicNds.forEach(n=>{ try{n.stop&&n.stop();n.disconnect&&n.disconnect();}catch(e){} });
+    await new Promise(res=>{ rec1.onstop=res; setTimeout(res,1200); });
+    setPrg(64);
+
+    const audioBlob = new Blob(chunks1, { type: mime1 });
+    const kb = (audioBlob.size/1024).toFixed(0);
+    lg('\u2713 Raw audio: ' + kb + ' KB, ' + ((t1_wall-t0_wall)/1000).toFixed(1) + 's recorded');
+    document.getElementById('recOverlay').classList.remove('on');
+
+    if (audioBlob.size < 1000) {
+      throw new Error('Audio too small (' + kb + ' KB) — check microphone is working and not muted');
+    }
+
+    // ══════════════════════════════════════════════
+    //  PASS 2 — Noise reduction on AudioBuffer
+    // ══════════════════════════════════════════════
+    lg('\U0001f50a Pass 2/3 — Noise reduction…', 'li');
+    setPrg(66);
+
+    const rawArrBuf = await audioBlob.arrayBuffer();
+    const decCtx    = new (window.AudioContext||window.webkitAudioContext)({ sampleRate: 44100 });
+    let   rawBuf;
+    try {
+      rawBuf = await decCtx.decodeAudioData(rawArrBuf);
+      lg('  \u2713 Decoded: ' + rawBuf.duration.toFixed(2) + 's, ' + rawBuf.numberOfChannels + 'ch');
+    } catch(e) {
+      throw new Error('Audio decode failed: ' + (e.message||e));
+    }
+    await decCtx.close().catch(()=>{});
+    setPrg(70);
+
+    // ── Spectral noise gate via OfflineAudioContext ──
+    // 1. Analyse first 0.35s as noise profile (pre-speech silence)
+    // 2. Apply: DynamicsCompressor + high-pass + low-pass + gentle expander
+    const sr       = rawBuf.sampleRate;
+    const nCh      = rawBuf.numberOfChannels;
+    const nFrames  = rawBuf.length;
+
+    // Compute RMS noise floor from first 0.3s
+    const noiseSamples = Math.min(Math.floor(sr * 0.30), nFrames);
+    let   noiseRMS = 0;
+    for (let ch=0; ch<nCh; ch++) {
+      const d = rawBuf.getChannelData(ch);
+      let sum = 0;
+      for (let j=0; j<noiseSamples; j++) sum += d[j]*d[j];
+      noiseRMS += Math.sqrt(sum/noiseSamples);
+    }
+    noiseRMS /= nCh;
+    const gateThresh = Math.max(noiseRMS * 3.5, 0.004); // gate threshold
+    lg('  Noise floor RMS: ' + noiseRMS.toFixed(5) + ', gate: ' + gateThresh.toFixed(5));
+
+    // Apply sample-level noise gate + gentle smoothing
+    const cleanBuf = new AudioBuffer({ numberOfChannels: nCh, length: nFrames, sampleRate: sr });
+    const smoothMs = 8;   // attack/release ms
+    const smoothN  = Math.floor(sr * smoothMs / 1000);
+
+    for (let ch=0; ch<nCh; ch++) {
+      const src = rawBuf.getChannelData(ch);
+      const dst = cleanBuf.getChannelData(ch);
+      let   env = 0; // envelope follower
+
+      for (let j=0; j<nFrames; j++) {
+        const abs = Math.abs(src[j]);
+        // Envelope follower (attack fast, release slow)
+        if (abs > env)  env += (abs - env) * (1 / (sr * 0.003));
+        else            env += (abs - env) * (1 / (sr * 0.080));
+
+        // Gate: if envelope below threshold, attenuate heavily
+        const gate = env > gateThresh ? 1.0 : Math.max(0, (env / gateThresh) * 0.08);
+        dst[j] = src[j] * gate;
+      }
+    }
+    lg('  \u2713 Noise gate applied');
+
+    // ── Process through OfflineAudioContext (EQ + compression) ──
+    const offCtx = new OfflineAudioContext(nCh, nFrames, sr);
+    const offSrc = offCtx.createBufferSource();
+    offSrc.buffer = cleanBuf;
+
+    // High-pass: cut below 100Hz (remove rumble)
+    const offHpf = offCtx.createBiquadFilter();
+    offHpf.type = 'highpass'; offHpf.frequency.value = 100; offHpf.Q.value = 0.7;
+
+    // Low-pass: cut above 8kHz (remove hiss)
+    const offLpf = offCtx.createBiquadFilter();
+    offLpf.type = 'lowpass'; offLpf.frequency.value = 8000; offLpf.Q.value = 0.7;
+
+    // Presence boost around voice 2-4kHz
+    const offPeak = offCtx.createBiquadFilter();
+    offPeak.type = 'peaking'; offPeak.frequency.value = 3000; offPeak.gain.value = 4; offPeak.Q.value = 1.2;
+
+    // Compressor to even out levels
+    const offComp = offCtx.createDynamicsCompressor();
+    offComp.threshold.value = -24;
+    offComp.knee.value      = 8;
+    offComp.ratio.value     = 4;
+    offComp.attack.value    = 0.003;
+    offComp.release.value   = 0.15;
+
+    // Output gain
+    const offGain = offCtx.createGain();
+    offGain.gain.value = 2.5;
+
+    offSrc.connect(offHpf); offHpf.connect(offLpf); offLpf.connect(offPeak);
+    offPeak.connect(offComp); offComp.connect(offGain); offGain.connect(offCtx.destination);
+    offSrc.start(0);
+
+    const processedBuf = await offCtx.startRendering();
+    lg('  \u2713 EQ + compression done: ' + processedBuf.duration.toFixed(2) + 's');
+    setPrg(78);
+
+    // ══════════════════════════════════════════════
+    //  PASS 3 — Mux video + processed audio
+    // ══════════════════════════════════════════════
+    lg('\U0001f3ac Pass 3/3 — Muxing video + audio…', 'li');
+
+    if (typeof HTMLCanvasElement.prototype.captureStream !== 'function') {
+      throw new Error('canvas.captureStream not available — use Chrome or Edge');
+    }
+
+    // Load video
+    const vidEl2 = document.createElement('video');
+    vidEl2.src = S.vidURL; vidEl2.muted = true; vidEl2.playsInline = true;
+    vidEl2.style.cssText = 'position:fixed;left:-9999px;top:0;width:1px;height:1px;';
+    document.body.appendChild(vidEl2);
+    await new Promise((res,rej) => {
+      const t=setTimeout(res,6000);
+      vidEl2.onloadedmetadata=()=>{ clearTimeout(t); res(); };
+      vidEl2.onerror=()=>rej(new Error('Video load failed'));
+      vidEl2.load();
+    });
+    const W2=vidEl2.videoWidth||1280, H2=vidEl2.videoHeight||720;
+    lg('  \u2713 Video: ' + W2 + '\xd7' + H2);
+
+    // Canvas
+    const canvas2 = document.createElement('canvas');
+    canvas2.width=W2; canvas2.height=H2;
+    const ctx2d2  = canvas2.getContext('2d');
+    ctx2d2.fillStyle='#000'; ctx2d2.fillRect(0,0,W2,H2);
+    const cs2       = canvas2.captureStream(30);
+    setPrg(82);
+
+    // ── SYNC: compute audio trim offset ──
+    // The audio buffer starts from t0_wall (when rec1.start() was called).
+    // The 400ms lead-in was intentional silence before speech.
+    // Segment 0 starts at seg.start seconds into the video.
+    // In the audio buffer, seg 0 speech starts at ~0.4s (lead-in) + seg.start.
+    // So audio[0.4 + seg0.start] aligns with video[seg0.start].
+    // Trim offset = 0.4s (lead-in) so audio and video share the same timeline.
+    const audioTrimSec = 0.40; // lead-in we added before speaking
+    const trimFrames   = Math.floor(audioTrimSec * processedBuf.sampleRate);
+    const trimmedLen   = processedBuf.length - trimFrames;
+    const trimmedBuf   = new AudioBuffer({
+      numberOfChannels: processedBuf.numberOfChannels,
+      length:           Math.max(trimmedLen, 1),
+      sampleRate:       processedBuf.sampleRate,
+    });
+    for (let ch=0; ch<processedBuf.numberOfChannels; ch++) {
+      const src2 = processedBuf.getChannelData(ch);
+      const dst2 = trimmedBuf.getChannelData(ch);
+      dst2.set(src2.subarray(trimFrames));
+    }
+    lg('  \u2713 Sync trim: removed ' + audioTrimSec + 's lead-in → audio now aligned with video');
+
+    // AudioContext for mux
+    const muxCtx  = new (window.AudioContext||window.webkitAudioContext)({ sampleRate: 44100 });
+    if (muxCtx.state==='suspended') await muxCtx.resume();
+    const muxDest = muxCtx.createMediaStreamDestination();
+    const audSrc  = muxCtx.createBufferSource();
+    const audGain = muxCtx.createGain();
+    audSrc.buffer    = trimmedBuf;
+    audGain.gain.value = 1.0;
+    audSrc.connect(audGain); audGain.connect(muxDest);
+    audSrc.connect(muxCtx.destination);
+    lg('  \u2713 Audio source ready (' + trimmedBuf.duration.toFixed(2) + 's)');
+
+    // Build stream + recorder
+    const muxTracks = cs2.getVideoTracks().concat(muxDest.stream.getAudioTracks());
+    const muxStream = new MediaStream(muxTracks);
+    const mime2 = ['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm']
+      .find(m=>{ try{return MediaRecorder.isTypeSupported(m);}catch(e){return false;} }) || 'video/webm';
+    const chunks2 = [];
+    let   muxRec;
+    try   { muxRec = new MediaRecorder(muxStream, {mimeType:mime2, videoBitsPerSecond:8000000, audioBitsPerSecond:192000}); }
+    catch(e) { muxRec = new MediaRecorder(muxStream); }
+    muxRec.ondataavailable = e => { if(e.data&&e.data.size>0) chunks2.push(e.data); };
+
+    // ── Sync start: rec → frame → audio → video all locked together ──
+    document.getElementById('recOverlay').classList.add('on');
+    document.getElementById('recProgLabel').textContent = 'Pass 3/3 — Muxing…';
+    document.getElementById('recProgInner').style.width = '0%';
+
+    muxRec.start(200);
+    // Start frame loop first
+    let frameLoop2=true, lastVT2=-1;
+    (function df2() {
+      if (!frameLoop2) return;
+      try {
+        if (vidEl2.readyState>=2 && Math.abs(vidEl2.currentTime-lastVT2)>0.01) {
+          ctx2d2.drawImage(vidEl2,0,0,W2,H2);
+          lastVT2 = vidEl2.currentTime;
+        }
+      } catch(e){}
+      requestAnimationFrame(df2);
+    })();
+
+    // Lock video + audio start to same AudioContext time
+    const syncT = muxCtx.currentTime + 0.05;
+    audSrc.start(syncT);
+    vidEl2.currentTime = 0;
+    // Schedule video.play() to fire at syncT
+    const syncDelay = (syncT - muxCtx.currentTime) * 1000;
+    await zzz(Math.max(syncDelay, 0));
+    try { await vidEl2.play(); } catch(e) { lg('  \u26a0 play(): ' + (e.message||e)); }
+    lg('  \u2713 Video + audio started in sync');
+    setPrg(86);
+
+    // Wait for video duration
+    const muxDur  = S.dur * 1000 + 1500;
+    let   muxElap = 0;
+    while (muxElap < muxDur) {
+      await zzz(300); muxElap += 300;
+      const pp = Math.round((muxElap/muxDur)*12);
+      setPrg(86+pp);
+      document.getElementById('recProgInner').style.width = Math.round((muxElap/muxDur)*100)+'%';
+      document.getElementById('recProgLabel').textContent = 'Muxing ' + ft(Math.round(muxElap/1000)) + ' / ' + ft(S.dur);
+    }
+
+    frameLoop2=false;
+    vidEl2.pause(); vidEl2.remove();
+    muxRec.stop();
+    await new Promise(res=>{ muxRec.onstop=res; setTimeout(res,1500); });
+    document.getElementById('recOverlay').classList.remove('on');
+    await muxCtx.close().catch(()=>{});
+    setPrg(100);
+
+    const blob2 = new Blob(chunks2, { type: mime2 });
+    const mb2   = (blob2.size/1e6).toFixed(2);
+    lg('Chunks: ' + chunks2.length + ', size: ' + mb2 + ' MB');
+
+    if (blob2.size < 5000) {
+      lg('\u274c Output too small — canvas capture may be blocked in this browser', 'le');
+      lg('  Use Chrome or Edge and keep the tab active', 'li');
+      setChipVideo('\u26a0 Too small — try Chrome/Edge', false);
+    } else {
+      lg('\u2705 Done — ' + mb2 + ' MB ready to download!', 'li');
+      const url2 = URL.createObjectURL(blob2);
+      document.getElementById('dlbtn').onclick = () => {
+        const a=document.createElement('a'); a.href=url2; a.download='syncstudio-final.webm'; a.click();
+        toast('\u2b07 Downloading…');
+      };
+      document.getElementById('dlnote').textContent = '\u2756 ' + mb2 + ' MB \u00b7 Noise-reduced \u00b7 Synced';
+      document.getElementById('dlready').classList.add('on');
+      setChipVideo('\u2705 Ready: ' + mb2 + ' MB', true);
+      toast('\u2756 Done! Download your video.');
+    }
+
+  } catch(err) {
+    cleanup();
+    const msg = (err instanceof Error)   ? err.message
+              : (err && err.message)     ? String(err.message)
+              : (err && err.toString)    ? err.toString()
+              : JSON.stringify(err);
+    lg('\u274c Error: ' + msg, 'le');
+    if (err && err.stack) lg('  ' + err.stack.split('\n').slice(0,2).join(' | '));
+    setChipVideo('\u274c Failed — see log', false);
+    toast('\u274c Failed — see log');
+  }
+
+  cleanup();
+  btn.disabled = false;
+}
+
+// ─────────────────────────────────────────
+//  HELPERS
+// ─────────────────────────────────────────
+function setPrg(p) { document.getElementById('prgfil').style.width=Math.min(p,100)+'%'; }
+function lg(msg,cls='') {
+  const el=document.getElementById('logbox');
+  const d=document.createElement('div');
+  if(cls) d.className=cls;
+  d.textContent=msg;
+  el.appendChild(d);
+  el.scrollTop=el.scrollHeight;
+}
+function setChipVideo(txt,ok) {
+  const el=document.getElementById('chip-video');
+  el.textContent=txt;
+  el.classList.toggle('ok',ok);
+  el.classList.toggle('warn',!ok);
+}
+function dlScript() {
+  if(!S.segs.length){ toast('⚠ No timeline'); return; }
+  let t='SYNCSTUDIO PRO — SCRIPT\n'+'─'.repeat(45)+'\n\n';
+  S.segs.forEach(s=>{ t+='['+ft(s.start)+' → '+ft(s.end)+']  '+s.ico+' '+s.lb+'\n'+s.line+'\n\n'; });
+  const b=new Blob([t],{type:'text/plain'});
+  const u=URL.createObjectURL(b);
+  const a=document.createElement('a'); a.href=u; a.download='syncstudio-script.txt'; a.click();
+  URL.revokeObjectURL(u);
+}
+function resetAll() {
+  speechSynthesis.cancel();
+  Object.assign(S,{dur:90,vidFile:null,vidURL:null,segs:[],music:'luxury',mv:0.20,playing:false,stopReq:false});
+  ['vp',''].forEach(()=>{});
+  document.getElementById('vp').style.display='none';
+  document.getElementById('fpill').classList.remove('on');
+  document.getElementById('dz1').classList.remove('ok');
+  document.getElementById('btn1').disabled=true;
+  document.getElementById('rawsc').value='';
+  document.getElementById('finsc').value='';
+  document.getElementById('diffbox').classList.remove('on');
+  document.getElementById('logbox').innerHTML='';
+  document.getElementById('dlready').classList.remove('on');
+  document.getElementById('prgwrap').classList.remove('on');
+  ['st0','st1','st2','st3','st4'].forEach(id=>{
+    const e=document.getElementById(id);
+    e.classList.remove('act','done');
+    e.querySelector('.sbadge').textContent='Pending';
+  });
+  document.getElementById('bpfil').style.width='0%';
+  document.getElementById('prgfil').style.width='0%';
+  document.getElementById('tll').innerHTML='';
+  document.getElementById('previewWrap').style.display='none';
+  document.getElementById('chip-video').textContent='🎬 Video: Not recorded';
+  document.getElementById('chip-video').classList.remove('ok','warn');
+  document.getElementById('btnRecord').disabled=false;
+  goTo(0); toast('↺ Reset');
+}
+function toast(msg) {
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
+  clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove('show'),3200);
+}
+</script>
+</body>
+</html>
